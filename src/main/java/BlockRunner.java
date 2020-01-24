@@ -14,6 +14,7 @@ import java.util.List;
 public class BlockRunner {
     static int playerX = 2;
     static int playerY = 10;
+    static boolean loop = true;
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -27,6 +28,7 @@ public class BlockRunner {
         // Set triangle symbol for player
         tg.setForegroundColor(TextColor.ANSI.YELLOW);
         char player = Symbols.TRIANGLE_RIGHT_POINTING_BLACK;
+
         // Create rectangle symbol for the goal
         tg.drawRectangle(
                 new TerminalPosition(79, 10),
@@ -38,21 +40,15 @@ public class BlockRunner {
         terminal.setCursorVisible(false);
         terminal.setCursorPosition(playerX, playerY);
         terminal.putCharacter(player);
-
         terminal.flush();
 
-        List<Block> blocks = new ArrayList<>();
-        blocks.add(new Block(terminal, 10, 3, 7, 2));
-        blocks.add(new Block(terminal, 20, 1, 10,3));
-        blocks.add(new Block(terminal, 30, 12, 8,2));
-        blocks.add(new Block(terminal, 40, 20, 3,4));
-        blocks.add(new Block(terminal, 50, 20, 10,4));
-        blocks.add(new Block(terminal, 60, 3, 5,5));
-        blocks.add(new Block(terminal, 70, 3, 3,2));
+        // crate blocks
+        List<Block> blocks = getBlocks(terminal);
 
-        while (true) {
+        // game engine
+        while (loop) {
             KeyStroke keyStroke = null;
-            Thread.sleep(5); // might throw InterruptedException
+            Thread.sleep(5);
             keyStroke = terminal.pollInput();
 
             if (keyStroke != null) {
@@ -67,7 +63,7 @@ public class BlockRunner {
 
                 // Detect when player reach the goal
                 if (playerY == 10 && playerX == 78) {
-                    break;
+                    loop = false;
                 }
             }
 
@@ -77,27 +73,15 @@ public class BlockRunner {
                 block.increaseCounter();
             }
 
+            boolean exit = false;
+            for (int i = 0; i < blocks.size(); i++){
+                if (blocks.get(i).getX() == playerX && blocks.get(i).getY() == playerY) {
+                    exit = true;
+                }
+            }
 
-            if (blocks.get(0).getX() == playerX && blocks.get(0).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(1).getX() == playerX && blocks.get(1).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(2).getX() == playerX && blocks.get(2).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(3).getX() == playerX && blocks.get(3).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(4).getX() == playerX && blocks.get(4).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(5).getX() == playerX && blocks.get(5).getY() == playerY) {
-                break;
-            }
-            if (blocks.get(6).getX() == playerX && blocks.get(6).getY() == playerY) {
-                break;
+            if (exit) {
+                loop = false;
             }
 
             terminal.setCursorPosition(playerX, playerY);
@@ -114,6 +98,9 @@ public class BlockRunner {
             tg.setForegroundColor(TextColor.ANSI.GREEN);
             terminal.clearScreen();
             tg.putString(33, 10, "Winner! Winner! Winner!", SGR.BOLD, SGR.BLINK);
+            tg.putString(33, 15, "Press ENTER to try again", SGR.FRAKTUR);
+
+
             screen.refresh();
             terminal.flush();
         } else {
@@ -121,9 +108,22 @@ public class BlockRunner {
             tg.putString(33, 10, "G A M E  O V E R !", SGR.BOLD, SGR.BLINK);
             tg.setForegroundColor(TextColor.ANSI.WHITE);
             tg.putString(61, 22, "you fucking loser", SGR.FRAKTUR);
+            tg.putString(33, 15, "Press ENTER to try again", SGR.FRAKTUR);
             screen.refresh();
             terminal.flush();
         }
+    }
+
+    private static List<Block> getBlocks(Terminal terminal) throws IOException {
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(new Block(terminal, 10, 3, 7, 2));
+        blocks.add(new Block(terminal, 20, 1, 10,3));
+        blocks.add(new Block(terminal, 30, 12, 8,2));
+        blocks.add(new Block(terminal, 40, 20, 3,4));
+        blocks.add(new Block(terminal, 50, 20, 10,4));
+        blocks.add(new Block(terminal, 60, 3, 5,5));
+        blocks.add(new Block(terminal, 70, 3, 3,2));
+        return blocks;
     }
 
     private static void directionInput(KeyType direction, int columnTemp, int rowTemp, Terminal terminal) throws IOException {
@@ -140,7 +140,11 @@ public class BlockRunner {
             case ArrowRight:
                 playerX++;
                 break;
+            case Enter:
+                loop = true;
+
         }
+
         // Erase "tale" of player
         if (playerX == 0 || playerX == 79) {
             playerX = columnTemp;
