@@ -30,8 +30,7 @@ public class BlockRunner {
         screen.startScreen();
 
         init(terminal);
-
-
+        
         // game engine
         loop(terminal, player, blocks);
         terminal.close();
@@ -103,24 +102,29 @@ public class BlockRunner {
             Thread.sleep(5);
             keyStroke = terminal.pollInput();
 
+            // create goal area
             TextGraphics tg = terminal.newTextGraphics();
             tg.drawRectangle(
                     new TerminalPosition(79, 10),
                     new TerminalSize(1, 1),
                     Symbols.BLOCK_MIDDLE);
 
+            // sets start position
+            terminal.setCursorPosition(playerX, playerY);
+            if (!gameOver)
+                terminal.putCharacter(player);
+            else {
+                gameOverScreen(terminal);
+            }
+            terminal.flush();
+
+            //
             if (keyStroke != null) {
 
                 KeyType direction = keyStroke.getKeyType();
                 Character c = keyStroke.getCharacter();
                 int columnTemp = playerX;
                 int rowTemp = playerY;
-
-                if (c != null) {
-                    if (c == 'q' || c == 'Q') {
-                        break;
-                    }
-                }
 
                 if (direction == KeyType.Enter) {
                     init(terminal);
@@ -130,8 +134,16 @@ public class BlockRunner {
                 // Method to steer player in arrowInput direction
                 directionInput(direction, columnTemp, rowTemp, terminal);
 
+                // quit game
+                if (c != null) {
+                    if (c == 'q' || c == 'Q') {
+                        break;
+                    }
+                }
+
             }
 
+            // display and move blocks
             if (!gameOver) {
                 for (Block block : blocks) {
                     block.displayBlock();
@@ -140,6 +152,7 @@ public class BlockRunner {
                 }
             }
 
+            // check if player posisiton is equal to any of the blocks
             boolean exit = false;
             for (int i = 0; i < blocks.size(); i++) {
                 if (blocks.get(i).getX() == playerX && blocks.get(i).getY() == playerY) {
@@ -147,21 +160,14 @@ public class BlockRunner {
                 }
             }
 
+            // reached goal
             if (playerY == 10 && playerX == 78) {
                 gameOver = true;
             }
 
-            terminal.setCursorPosition(playerX, playerY);
-            if (!gameOver)
-                terminal.putCharacter(player);
-            else {
-                gameOverScreen(terminal);
-            }
-            terminal.flush();
         }
 
     }
-
 
     private static List<Block> getBlocks(Terminal terminal) throws IOException {
         List<Block> blocks = new ArrayList<>();
@@ -190,7 +196,6 @@ public class BlockRunner {
                 case ArrowRight:
                     playerX++;
                     break;
-
             }
 
             // Erase "tale" of player
