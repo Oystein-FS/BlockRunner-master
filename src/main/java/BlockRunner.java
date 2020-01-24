@@ -1,7 +1,4 @@
-import com.googlecode.lanterna.SGR;
-import com.googlecode.lanterna.Symbols;
-import com.googlecode.lanterna.TerminalPosition;
-import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
@@ -11,33 +8,29 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BlockRunner {
-    static boolean down = true;
     static int playerX = 2;
     static int playerY = 10;
-    static long count = 0;
-
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        // Set up terminal and screen, and create variable for use of TextGraphics
         Terminal terminal = new DefaultTerminalFactory().createTerminal();
         Screen screen = new TerminalScreen(terminal);
         TextGraphics tg = screen.newTextGraphics();
-
         terminal.setCursorVisible(false);
-
         screen.startScreen();
 
-
-        int blockX = 10;
-        int blockY = 3;
-
+        // Set triangle symbol for player
+        tg.setForegroundColor(TextColor.ANSI.YELLOW);
         char player = Symbols.TRIANGLE_RIGHT_POINTING_BLACK;
-
+        // Create rectangle symbol for the goal
         tg.drawRectangle(
                 new TerminalPosition(79, 10),
-                new TerminalSize(1, 5),
+                new TerminalSize(1, 1),
                 Symbols.BLOCK_MIDDLE);
 
         screen.refresh();
@@ -48,11 +41,17 @@ public class BlockRunner {
 
         terminal.flush();
 
-        //Block block1 = new Block(terminal,20, 10);
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(new Block(terminal, 10, 3, 7, 2));
+        blocks.add(new Block(terminal, 20, 1, 10,3));
+        blocks.add(new Block(terminal, 30, 12, 8,2));
+        blocks.add(new Block(terminal, 40, 20, 3,4));
+        blocks.add(new Block(terminal, 50, 20, 10,4));
+        blocks.add(new Block(terminal, 60, 3, 5,5));
+        blocks.add(new Block(terminal, 70, 3, 3,2));
 
         while (true) {
             KeyStroke keyStroke = null;
-
             Thread.sleep(5); // might throw InterruptedException
             keyStroke = terminal.pollInput();
 
@@ -60,138 +59,96 @@ public class BlockRunner {
 
                 KeyType direction = keyStroke.getKeyType();
                 Character c = keyStroke.getCharacter();
-
                 int columnTemp = playerX;
                 int rowTemp = playerY;
 
-                switch (direction) {
-                    case ArrowDown:
-                        playerY++;
-                        break;
-                    case ArrowUp:
-                        playerY--;
-                        break;
-                    case ArrowLeft:
-                        playerX--;
-                        break;
-                    case ArrowRight:
-                        playerX++;
-                        break;
-                }
+                // Method to steer player in arrowInput direction
+                directionInput(direction, columnTemp, rowTemp, terminal);
 
-                if (playerX == 0 || playerX == 79) {
-                    playerX = columnTemp;
-                }
-                if (playerY == 0 || playerY == 23) {
-                    playerY = rowTemp;
-                }
-
+                // Detect when player reach the goal
                 if (playerY == 10 && playerX == 78) {
                     break;
                 }
-
-                terminal.setCursorPosition(columnTemp, rowTemp);
-                terminal.putCharacter(' ');
             }
 
-            if (count % 10 == 0) {
-                if (down) {
-                    blockY++;
-                } else {
-                    blockY--;
-                }
+            for (Block block : blocks) {
+                block.displayBlock();
+                block.moveBlock();
+                block.increaseCounter();
             }
 
-            if (blockY == 22) {
-                down = false;
-            }
 
-            if (blockY == 1) {
-                down = true;
-            }
-
-            if (!drawBlock(terminal, blockX, blockY)) {
+            if (blocks.get(0).getX() == playerX && blocks.get(0).getY() == playerY) {
                 break;
             }
-
-            /*block1.displayBlock();
-            block1.moveBlock();
-*/
-            if (!drawBlock(terminal, 20, blockY)) {
+            if (blocks.get(1).getX() == playerX && blocks.get(1).getY() == playerY) {
                 break;
             }
-
-            if (!drawBlock(terminal, 30, blockY)) {
+            if (blocks.get(2).getX() == playerX && blocks.get(2).getY() == playerY) {
                 break;
             }
-
-            if (!drawBlock(terminal, 40, blockY)) {
+            if (blocks.get(3).getX() == playerX && blocks.get(3).getY() == playerY) {
                 break;
             }
-
-            if (!drawBlock(terminal, 50, blockY)) {
+            if (blocks.get(4).getX() == playerX && blocks.get(4).getY() == playerY) {
                 break;
             }
-            if (!drawBlock(terminal, 60, blockY)) {
+            if (blocks.get(5).getX() == playerX && blocks.get(5).getY() == playerY) {
                 break;
             }
-            if (!drawBlock(terminal, 70, blockY)) {
+            if (blocks.get(6).getX() == playerX && blocks.get(6).getY() == playerY) {
                 break;
             }
 
             terminal.setCursorPosition(playerX, playerY);
             terminal.putCharacter(player);
             terminal.flush();
-
-            count++;
         }
 
+        // win or loose screen
         TextGraphics textGraphics = terminal.newTextGraphics();
-
-        if (playerY == 12 && playerX == 78) {
-            textGraphics.putString(35, 10, "Winner!", SGR.BOLD);
+        tg.setForegroundColor(TextColor.ANSI.GREEN);
+        tg.setForegroundColor(TextColor.ANSI.MAGENTA);
+        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        if (playerY == 10 && playerX == 78) {
+            tg.setForegroundColor(TextColor.ANSI.GREEN);
+            terminal.clearScreen();
+            tg.putString(33, 10, "Winner! Winner! Winner!", SGR.BOLD, SGR.BLINK);
+            screen.refresh();
             terminal.flush();
         } else {
-            textGraphics.putString(33, 10, "G A M E  O V E R !", SGR.BOLD);
+            tg.setForegroundColor(TextColor.ANSI.MAGENTA);
+            tg.putString(33, 10, "G A M E  O V E R !", SGR.BOLD, SGR.BLINK);
+            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            tg.putString(61, 22, "you fucking loser", SGR.FRAKTUR);
+            screen.refresh();
             terminal.flush();
         }
-
     }
 
-
-    static boolean drawBlock(Terminal terminal, int blockX, int blockY) throws IOException {
-
-        int lenght = 3;
-
-        for (int i = 0; i < lenght; i++) {
-            int position;
-            if (down)
-                position = blockY + i;
-            else
-                position = blockY - i;
-            if (playerX == blockX && playerY == position) {
-
-                return false;
-
-            }
-
-            terminal.setCursorPosition(blockX, position);
-            terminal.putCharacter('\u2588');
+    private static void directionInput(KeyType direction, int columnTemp, int rowTemp, Terminal terminal) throws IOException {
+        switch (direction) {
+            case ArrowDown:
+                playerY++;
+                break;
+            case ArrowUp:
+                playerY--;
+                break;
+            case ArrowLeft:
+                playerX--;
+                break;
+            case ArrowRight:
+                playerX++;
+                break;
         }
-
-        int spacePosition;
-
-        if (down) {
-            spacePosition = blockY - 1;
-        } else {
-            spacePosition = blockY + 1;
+        // Erase "tale" of player
+        if (playerX == 0 || playerX == 79) {
+            playerX = columnTemp;
         }
-
-        terminal.setCursorPosition(blockX, spacePosition);
+        if (playerY == 0 || playerY == 23) {
+            playerY = rowTemp;
+        }
+        terminal.setCursorPosition(columnTemp, rowTemp);
         terminal.putCharacter(' ');
-
-        return true;
     }
-
-
 }

@@ -1,4 +1,3 @@
-/*
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
@@ -7,58 +6,74 @@ import java.io.IOException;
 public class Block {
     private int posistionX;
     private int posistionY;
+    private int speed;
+    private int size;
     Terminal terminal;
     private long counter = 0;
+    boolean down = true;
+    int spacePosition;
 
 
-    public Block(Terminal terminal, int posistionX, int posistionY) throws IOException {
+    public Block(Terminal terminal, int posistionX, int posistionY, int speed, int size) throws IOException {
         this.posistionX = posistionX;
         this.posistionY = posistionY;
         this.terminal = terminal;
+        this.speed = speed;
+        this.size = size;
     }
 
     public void moveBlock() throws IOException {
-        for (int i = 0; i < 3; i++) {
-
+        // move blocks bases on the defined speed
+        if (this.counter %  speed == 0){
             if (down) {
-                posistionY++;
+                this.spacePosition = this.posistionY;
+                this.posistionY++;
+            } else {
+                this.spacePosition = this.posistionY;
+                this.posistionY--;
             }
-            else {
-                posistionYi--;
-            }
-
-            terminal.setCursorPosition(posistionX, posistionY);
-            terminal.putCharacter('\u2588');
         }
 
-        int spacePosition;
-
-        if (down) {
-            spacePosition = blockY - 1;
-        } else {
-            spacePosition = blockY + 1;
+        // defines boundaries
+        if (this.posistionY == 22) {
+            down = false;
         }
 
-        terminal.setCursorPosition(blockX, spacePosition);
-        terminal.putCharacter(' ');
-
+        if (this.posistionY == 1) {
+            down = true;
+        }
     }
-        //this.posistionY--;
-
-
 
     public void displayBlock() throws IOException {
-        terminal.setCursorPosition(this.posistionX, this.posistionY);
-        terminal.putCharacter('\u2588');
-        terminal.flush();
+        for (int i = 0; i < size; i++) {
+            if (down) {
+                terminal.setCursorPosition(this.posistionX, this.posistionY - i);
+                terminal.putCharacter('\u2588');
+                terminal.setCursorPosition(this.posistionX, this.spacePosition - i);
+                terminal.putCharacter(' ');
+                terminal.flush();
+            } else {
+                terminal.setCursorPosition(this.posistionX, this.posistionY + i);
+                terminal.putCharacter('\u2588');
+                terminal.setCursorPosition(this.posistionX, this.spacePosition + i);
+                terminal.putCharacter(' ');
+                terminal.flush();
+            }
+        }
 
     }
 
-    public void  increaseCounter(){
+    public void increaseCounter(){
         this.counter++;
     }
 
+    public int getX(){
+      return this.posistionX;
+    }
+
+    public int getY(){
+        return this.posistionY;
+    }
 
 }
 
-*/
